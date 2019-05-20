@@ -26,7 +26,7 @@ class Game:
 		self.playing = True
 
 		# height and width of playing board
-		self.n = 25
+		self.n = 10
 
 		self.score = 0
 		self.maxscore = 0
@@ -34,7 +34,7 @@ class Game:
 
 		# set parameters
 		# learning rate and discount factor
-		self.lr = .5
+		self.lr = 1
 		self.df = .25
 
 		# keep set of moves to food when q learning is finished
@@ -51,16 +51,12 @@ class Game:
 		# this is the maximum steps needed to reach food
 		(hx, hy) = self.snake[0][0], self.snake[0][1]
 		(fx, fy) = self.food[0][0], self.food[0][1]
-
-
-
 		self.OPTsteps = abs(hx - fx) + abs(hy - fy)
 
 		self.playgame()
 	
 	def move(self, value):
 
-		print(self.food)
 		if self.rl:
 			if self.moves == []:
 				# initialize virtual grid
@@ -74,16 +70,17 @@ class Game:
 				# save old snake
 				oldsnake = copy.deepcopy(self.snake)
 
-				# give food good reward give snake head bad reward
+				# give food good reward
 				x = [x for x in self.snake[0]]
+
 				(fx, fy) = self.food[0][0], self.food[0][1]
 				grid[fx][fy] = 100
-				# grid[x[0]][x[1]] = -10
 
 				print("gathering test data...")
 
 				while(True):
-
+					print("fud")
+					print(self.food)
 					# need to save status of snake
 					dead = False
 					moved = False
@@ -110,75 +107,98 @@ class Game:
 					# traverse in that direction if the snake can live
 					# up
 					if (direction == 0):
-						if (self.score = 0):
-							self.snake_dir = (0, 1)
-						else:
-							# dont go up if snake was going down
-							if (olddirection != (0, -1)):
+						if (oldx[1] != (self.n - 1)):
+							if (self.score == 0):
 								self.snake_dir = (0, 1)
+								moved = True
+							else:
+								# dont go up if snake was going down
+								if (olddirection != (0, -1)):
+									self.snake_dir = (0, 1)
+									moved = True
 					# down
 					if (direction == 1):
-						self.snake_dir = (0, -1)
-
+						if (oldx[1] != 0):
+							if (self.score == 0):
+								self.snake_dir = (0, -1)
+								moved = True
+							else:
+								# dont go down if snake was going up
+								if (olddirection != (0, 1)):
+									self.snake_dir = (0, -1)
+									moved = True		
 					# left
 					if (direction == 2):
-						self.snake_dir = (-1, 0)
-
+						if (oldx[0] != 0):
+							if (self.score == 0):
+								self.snake_dir = (-1, 0)
+								moved = True
+							else:
+								# dont go left if snake was going right
+								if (olddirection != (1, 0)):
+									self.snake_dir = (-1, 0)
+									moved = True
 					# right
 					if (direction == 3):
-						self.snake_dir = (0, 1)
+						if (oldx[0] != (self.n - 1)):
+							if (self.score == 0):
+								self.snake_dir = (1, 0)
+								moved = True
+							else:
+								# dont go right if snake was going left
+								if (olddirection != (-1, 0)):
+									self.snake_dir = (1, 0)
+									moved = True
 
-					self.moves.append(self.snake_dir)
-					head = self.snake[0]
-					newpos = (self.snake_dir[0] + head[0], self.snake_dir[1] + head[1])
+					if moved:
+						self.moves.append(self.snake_dir)
+						head = self.snake[0]
+						newpos = (self.snake_dir[0] + head[0], self.snake_dir[1] + head[1])
+						self.snake.insert(0, newpos)
 
-					self.snake.insert(0, newpos)
-
-					# check if snake lived and update move list and reset if it didnt
-					(hx, hy) = self.snake[0][0], self.snake[0][1]
-					if hx < 0 or hx >= self.n or hy < 0 or hy >= self.n:
-						dead = True
-						print("DIED!!!!! at")
-						print(self.snake)
-						self.snake.pop(0)
-					elif (len(self.snake) != len(set(self.snake))) and len(self.moves) > 1:
-						dead = True
-						print("DIED!!!!! at")
-						print(self.snake)
-						self.snake.pop(0)
-					else:
-						self.snake.pop()
-
-					# get new head and find values of state
-					x = [x for x in self.snake[0]]
-
-					# get highest scoring move in new state
-					scores = []
-					for i in table[x[0]][x[1]]:
-						scores.append(i)
-
-					m = max(scores)
-					choose = [i for i, j in enumerate(scores) if j == m]
-					qprime = random.choice(choose)
-
-			
-					if dead:
-						if grid[oldx[0]][oldx[1]] > 0:
-							grid[oldx[0]][oldx[1]] = -5
+						# check if snake lived and update move list and reset if it didnt
+						(hx, hy) = self.snake[0][0], self.snake[0][1]
+						if hx < 0 or hx >= self.n or hy < 0 or hy >= self.n:
+							dead = True
+							print("DIED!!!!! at")
+							print(self.snake)
+							self.snake.pop(0)
+						elif (len(self.snake) != len(set(self.snake))) and len(self.moves) > 1:
+							dead = True
+							print("DIED!!!!! at")
+							print(self.snake)
+							self.snake.pop(0)
 						else:
-							grid[oldx[0]][oldx[1]] -= 5
-					else:
+							self.snake.pop()
+					
+						# get new head and find values of state
+						x = [x for x in self.snake[0]]
+
+						# get highest scoring move in new state
+						scores = []
+						for i in table[x[0]][x[1]]:
+							scores.append(i)
+
+						m = max(scores)
+						choose = [i for i, j in enumerate(scores) if j == m]
+						qprime = random.choice(choose)
+
+
+						reward = grid[oldx[0]][oldx[1]]
+
 						if grid[oldx[0]][oldx[1]] > 0:
-						 	grid[oldx[0]][oldx[1]] = -1
+							grid[oldx[0]][oldx[1]] = -1
 						else:
 							grid[oldx[0]][oldx[1]] -= 1
 
 						# table[oldx[0]][oldx[1]][direction] -= 1
 
-					# update q table
-					table[oldx[0]][oldx[1]][direction] += \
-					(self.lr * ((grid[oldx[0]][oldx[1]] + (self.df * scores[qprime])) - \
-					table[oldx[0]][oldx[1]][direction]))
+						# update q table
+						table[oldx[0]][oldx[1]][direction] += \
+						(self.lr * ((grid[oldx[0]][oldx[1]] + (self.df * scores[qprime])) - \
+						table[oldx[0]][oldx[1]][direction]))
+					else:
+						table[oldx[0]][oldx[1]][direction] -= 10
 
 					##
 					## END Q LEARNING
@@ -186,15 +206,23 @@ class Game:
 
 					step += 1
 
+					print("snek = ")
 					print(self.snake)
 					if dead:
+						print("DOES THIS STILL PRINT??")
+						print("DOES THIS STILL PRINT??")
+						print("DOES THIS STILL PRINT??")
+						print("DOES THIS STILL PRINT??")
+						print("DOES THIS STILL PRINT??")
 						# self.moves.pop()
 						# step -= 1
 						self.moves.clear()
 						self.snake = copy.deepcopy(oldsnake)
 						step = 0
 					# check if agent is finished
-					if x == [fx, fy]:
+					print("mobes")
+					print(self.moves)
+					if [x for x in self.snake[0]] == [fx, fy]:
 						print("OMG!!!!")
 						print("FOUND FOOD!!!!")
 						print("OMG!!!!")
@@ -227,6 +255,7 @@ class Game:
 			self.snake.clear()
 			self.food.clear()
 			self.playing = False
+			print("ahhh died")
 			return
 
 		# check if snake found food
