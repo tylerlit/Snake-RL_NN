@@ -8,8 +8,8 @@ class Net:
 		self.traindata, self.trainlabels = self.readdata()
 
 		self.net = tflearn.input_data(shape=[None, 12])
-		self.net = tflearn.fully_connected(self.net, 24, activation='sigmoid')
-		self.net = tflearn.fully_connected(self.net, 24, activation='softmax')
+		self.net = tflearn.fully_connected(self.net, 8, activation='sigmoid')
+		self.net = tflearn.fully_connected(self.net, 8, activation='relu')
 		self.net = tflearn.fully_connected(self.net, 4, activation='sigmoid')
 		self.net = tflearn.regression(self.net)
 

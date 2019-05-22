@@ -300,7 +300,7 @@ class Game:
 		stuff = self.getstuff()
 		pred = self.model.predict([stuff])
 		pred = pred[0]
-		move = [int(x) for x in pred]
+		move = [int(round(x)) for x in pred]
 		if move == [1,0,0,0]:
 			self.snake_dir = (0, 1)
 		elif move == [0,1,0,0]:
